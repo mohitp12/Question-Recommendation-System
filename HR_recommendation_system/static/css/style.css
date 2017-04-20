@@ -1,0 +1,142 @@
+
+a {
+  color: #00B7FF;
+}
+.signup-wrapper {
+  width: 392px;
+  padding: 30px 0;
+  margin: 0 auto;
+}
+.textbox-control { display: inline-block;
+  width: 392px;
+  padding: 10px;
+  margin: 0;
+  outline: 0;
+  background-color: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 3px;
+  font-size:30px;
+}
+
+.control1 { display: inline-block;
+  width: 200px;
+  padding: 10px;
+  margin: 0;
+  outline: 0;
+  background-color: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 3px;
+  font-size:20px;
+}
+.submit-button
+{
+
+  width: 392px;
+  background-color: #27458D;
+  background-repeat: no-repeat;
+  background-image: none;
+  box-shadow: none;
+  font-size: 16px;
+  font-weight: normal;
+  padding: 12px 16px;
+  border: 0
+}
+.text-box {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 0;
+}
+
+.field-input {
+  width: 372px;
+  padding: 10px;
+  font-size: 18px;
+}
+.container {
+
+  text-align: center;
+  width: auto;
+  height:auto
+  background: #fff;
+  color: #292f33;
+  font-size: 14px;
+  line-height: 18px;
+  overflow-y: scroll;
+  padding-right: 0; /*15px in bootstrap.css*/
+  padding-left: 0;  /*idem*/
+  margin-right: auto;
+  margin-left: auto;
+}
+
+button {
+  border: 0;
+}
+button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+button, html input[type="button"], input[type="reset"], input[type="submit"] {
+  -webkit-appearance: button;
+  cursor: pointer;
+}
+button, select {
+  text-transform: none;
+}
+button {
+  overflow: visible;
+}
+button, input, optgroup, select, textarea {
+  color: inherit;
+  font: inherit;
+  margin: 0;
+}
+
+.StartActions {
+  margin: 0 auto;
+  text-align: center;
+  width: 80%;
+}
+.Icon {
+  background: transparent;
+  display: inline-block;
+  font-style: normal;
+  vertical-align: baseline;
+  position: relative;
+}
+
+
+.Grid-cell {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  display: inline-block;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  vertical-align: top;
+  width: 100%;
+}
+
+.Grid {
+  display: block;
+  font-size: 0;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.squared{
+  border: 2px dotted #1da1f2 ;
+
+
+}
+.stream-end-inner {
+  padding: 15px 50px;
+  background-color: #fff;
+  border-radius: 0 0 5px 5px;
+}
+.stream-end, .stream-loading, .stream-placeholder, .content-placeholder, .back-to-top, .btn-link.back-to-top {
+  font-size: 13px;
+  color: #8899a6;
+  text-align: center;
+}

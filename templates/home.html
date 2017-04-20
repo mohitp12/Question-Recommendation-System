@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en-us">
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+        {% load static %}<script src="{% static 'JS/angular-datatables.min.js' %}"></script> 
+        {% load static %}<link rel="stylesheet" href="{% static 'css/angular-datatables.css' %}"></script> 
+        <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"> -->
+
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="//cdn.tinymce.com/4/tinymce.min.js"></script>
+        <script>tinymce.init({ selector:'textarea' });</script>
+        {% load static %}<link rel="stylesheet" href="{% static 'css/style.css' %}"></script>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.2/nv.d3.min.css"/>     
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.2/nv.d3.min.js"></script>
+        <script src="https://rawgit.com/krispo/angular-nvd3/v1.0.6/dist/angular-nvd3.js"></script>
+
+        <style>
+            
+            .question-title {
+                margin-top: 1em;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+                margin-bottom: 20px;
+            }
+
+            .text-info {
+                color: #2ec866;
+            }
+
+            .cdn-error-view {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                background: white;
+                z-index: 9999;
+                font-family: "Whitney SSm A", "Whitney SSm B", "Avenir", "Segoe UI", "Ubuntu", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            }
+            
+            .cdn-error-view .error-box-wrap {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                padding: 20px;
+                transform: translate(-50%, -50%);
+                -ms-transform: translate(-50%, -50%);
+                -webkit-transform: translate(-50%, -50%);
+                text-align: center;
+            }
+            
+            .cdn-error-view .error-icon {
+                text-align: center;
+            }
+            
+            .cdn-error-view .error-title {
+                font-size: 48px;
+                margin-top: 30px;
+                margin-bottom: 0;
+                font-weight: bold;
+            }
+            
+            .cdn-error-view .error-message {
+                margin-top: 20px;
+                margin-bottom: 0;
+            }
+            
+            .cdn-error-view .btn-wrap {
+                margin-top: 20px;
+            }
+            
+            .cdn-error-view .btn-reload {
+                width: 300px;
+                padding: 10px;
+                border-radius: 3px;
+                border-color: #088837;
+                border-bottom-color: #007827;
+                border-width: 1px;
+                border-style: solid;
+                color: #FFF;
+                background-color: #2ec866;
+                background-image: -webkit-gradient(linear, top left, bottom left, color-stop(0, #2ec866), color-stop(1, #29b35b));
+                background-image: -webkit-linear-gradient(top, #2ec866, #29b35b);
+                background-image: linear-gradient(top, #2ec866, #29b35b);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1), inset 0 -1px 4px rgba(32, 138, 70, 0.3);
+                outline: none;
+            }
+        </style>
+
+        <link href="https://hrcdn.net/hackerrank/assets/hackerrank_libraries-73ed0cf4ad277ee2b2dc78ea33628e49.css" media="all" rel="stylesheet">
+        <link href="https://hrcdn.net/hackerrank/assets/hackerrank-core-43bb3b73da95cbf689fced398bfdde5f.css" media="all" rel="stylesheet">
+        <link href="https://hrcdn.net/hackerrank/assets/dashboard-c38586c544dcf027d89428f292bcc733.css" media="all" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://hrcdn.net/hackerrank/assets/hackerrank_r_app-3e16d66acd46feb299b4.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+        <script>    
+            var ims = angular.module("ims", ["datatables", "nvd3"]);
+            ims.controller('home_ctrl', function($scope,$http,$window, DTOptionsBuilder, DTColumnDefBuilder){
+
+                $scope.challengeTable_Display = true;
+                $scope.challengeInfo_Display = false;
+                $scope.dtOptions = DTOptionsBuilder.newOptions().withPaginationType('full_numbers').withDisplayLength(25).withOption('order', [1, 'desc']);;
+                $scope.dtColumnDefs = [
+                    DTColumnDefBuilder.newColumnDef(0),
+                    DTColumnDefBuilder.newColumnDef(1),
+                    DTColumnDefBuilder.newColumnDef(2)
+                ];
+                $scope.dtOptionsRec = DTOptionsBuilder.newOptions().withPaginationType('full_numbers').withDisplayLength(25).withOption('order', [1, 'desc']);;
+                $scope.dtColumnDefsRec = [
+                    DTColumnDefBuilder.newColumnDef(0),
+                    DTColumnDefBuilder.newColumnDef(1),
+                    DTColumnDefBuilder.newColumnDef(2)
+                ];
+                $scope.user_id = sessionStorage.getItem('user_id');
+                $scope.username = sessionStorage.getItem('username')
+                $http({
+                        method:"GET",
+                        url:'v1/getchallenges',
+                        }).then(function(res){
+                            $scope.challengeDetails = [];
+                            var diff;
+                            var dom;
+
+                            for (var i = 0; i < res.data.length; i++) {
+                                if (res.data[i][4] < 0.33) 
+                                    diff = 'Easy';
+                                else if (res.data[i][4] < 0.66)
+                                    diff = 'Medium';
+                                else
+                                    diff = 'Difficult';
+
+                                if (res.data[i][2] == null) 
+                                    dom = 'Interview Questions';
+                                else
+                                    dom = res.data[i][2];
+
+                                $scope.challengeDetails.push({
+                                    'challenge_id':res.data[i][0],
+                                    'domain':dom,
+                                    'subdomain':res.data[i][3],
+                                    'difficulty':diff,
+                                    'solved':res.data[i][5],
+                                    'attempted':res.data[i][6]
+                                });
+                            }
+                            $scope.challengeDetails.shift();
+                            // console.log($scope.challengeDetails[2800].domain);
+                        })
+
+                 $scope.barChartOptions = {
+                    chart: {
+                        type: 'discreteBarChart',
+                        height: 450,
+                        margin : {
+                            top: 20,
+                            right: 20,
+                            bottom: 50,
+                            left: 55
+                        },
+                        x: function(d){return d.label;},
+                        y: function(d){return d.value + (1e-10);},
+                        showValues: true,
+                        valueFormat: function(d){
+                            return d3.format(',.4f')(d);
+                        },
+                        duration: 500,
+                        xAxis: {
+                            axisLabel: 'Domain'
+                        },
+                        yAxis: {
+                            axisLabel: 'Attempted',
+                            axisLabelDistance: -1
+                        }
+                    }
+                };
+
+                $scope.scatterChartOptions = {
+                    chart: {
+                        type: 'scatterChart',
+                        height: 450,
+                        color: d3.scale.category10().range(),
+                        scatter: {
+                            onlyCircles: false
+                        },
+                        showDistX: true,
+                        showDistY: true,
+                        tooltipContent: function(key) {
+                            return '<h3>' + key + '</h3>';
+                        },
+                        duration: 350,
+                        xAxis: {
+                            axisLabel: 'Number of Candidates',
+                            tickFormat: function(d){
+                                return d3.format('.02f')(d);
+                            }
+                        },
+                        yAxis: {
+                            axisLabel: 'contest ID',
+                            tickFormat: function(d){
+                                return d3.format('.02f')(d);
+                            },
+                            axisLabelDistance: -5
+                        },
+                        zoom: {
+                            //NOTE: All attributes below are optional
+                            enabled: false,
+                            scaleExtent: [1, 10],
+                            useFixedDomain: false,
+                            useNiceScale: false,
+                            horizontalOff: false,
+                            verticalOff: false,
+                            unzoomEventType: 'dblclick.zoom'
+                        }
+                    }
+                };
+
+
+                $scope.barChart = function(){
+                    $scope.popularDomain = new Object();
+                    $scope.barChartData = [{'key':'Popularity', 'values':[]}];
+                    for (var i = 0; i < $scope.challengeDetails.length; i++) {
+                        if ($scope.popularDomain.hasOwnProperty($scope.challengeDetails[i].domain)) {
+                            $scope.popularDomain[$scope.challengeDetails[i].domain].count += parseInt($scope.challengeDetails[i].attempted);
+                            // console.log($scope.popularDomain); 
+                        } else {
+                            $scope.popularDomain[$scope.challengeDetails[i].domain] = {count: parseInt($scope.challengeDetails[i].attempted)};
+                            // console.log($scope.popularDomain); 
+                        }
+                    }
+
+                    console.log($scope.popularDomain); 
+                    
+                    for (var k in $scope.popularDomain) {
+                        $scope.barChartData[0].values.push({'label': k.slice(0,7), 'value': $scope.popularDomain[k].count});
+                        
+                    }
+                    console.log($scope.barChartData); 
+                    $scope.challengeTable_Display = false;
+                    $scope.challengeInfo_Display = false; 
+                    $scope.graph_Display = true;
+
+                }
+
+                $scope.scatterChartData = generateData(3,40);
+
+                /* Random Data Generator (took from nvd3.org) */
+                function generateData(groups, points) {
+                    var data = [],
+                        shapes = ['circle', 'cross', 'triangle-up', 'triangle-down', 'diamond', 'square'],
+                        random = d3.random.normal();
+
+                    var groupsA = ['Highly Qualified', 'Average', 'Low Qualified'];
+                    for (var i = 0; i < groups; i++) {
+                        data.push({
+                            key: groupsA[i],
+                            values: []
+                        });
+
+                        for (var j = 0; j < points; j++) {
+                            data[i].values.push({
+                                x: Math.floor(Math.random()*21)
+                                , y: Math.floor(Math.random()*21)
+                                , size: Math.random()
+                                , shape: shapes[j % 6]
+                            });
+                        }
+                    }
+                    return data;
+                }
+
+                $scope.details = function(showDetails, data){
+                    $scope.challengeInfo_Display = showDetails;
+                    $scope.challengeTable_Display = !showDetails;
+                    $scope.graph_Display = false;
+                    $scope.challengeData = data;
+                }
+
+                $scope.calculateRec = function(){
+                    $scope.recData = [];
+                    console.log($scope.user_id);
+                      $http({
+                        method:"POST",
+                        url:'v1/getallrecs',
+                        data:{
+                            id:$scope.user_id,
+                            challenge_id:$scope.challengeData.challenge_id
+                        },
+                        }).then(function(res){
+                            // console.log(res.data);
+
+                            for (var i = 0; i < res.data.length; i++) {
+                                for (var j=0; j<res.data[i].length; j++){
+                                   for (var k=0; j<res.data[i][j].length; k++){
+                                        $scope.recData.push({
+                                            'challenge_id':res.data[i][j][0],
+                                            'domain':res.data[i][j][1],
+                                            'subdomain':res.data[i][j][2],
+                                            'difficulty':res.data[i][j][3],
+                                            'solved':res.data[i][j][4],
+                                            'attempted':res.data[i][j][5]
+                                        });
+                                    } 
+                                }
+                                
+                            }
+                        });
+                        console.log($scope.recData);
+                    $scope.challengeInfo_Display = false;
+                    $scope.challengeTable_Display = false;
+                    $scope.recTable_Display = true;
+                }
+
+            });
+        </script>
+        {% verbatim %}
+    </head>
+
+<body ng-app="ims" ng-controller="home_ctrl">
+    <div id="content">
+        <div class="body-wrap">
+            <nav class="page-header" data-reactid="4">
+                    <div class="container" data-reactid="5">
+                        <div class="nav-links" data-reactid="6">
+                            <ul class="pull-left nav-links-active" data-reactid="7">
+                                <li data-reactid="8">
+                                    <a href="" class="nav_link backbone logo_mark js_logo_mark" data-analytics="NavBarLogo" data-reactid="9"><img id="feed-intro" src="https://hrcdn.net/hackerrank/assets/brand/h_mark_sm-05bceb881aa02b72d688d21db01df5d8.png" alt="" data-reactid="10" /></a>
+                                </li>
+                                <li data-reactid="11" ng-click="details(false)"><a class="nav_link backbone domains active" data-analytics="NavBarDomains" href="" data-reactid="12"><i class="icon-home" data-reactid="13"></i><span data-reactid="14">List of Challanges</span></a></li>
+                                <li data-reactid="15" ng-click="calculateRec();"><a class="nav_link backbone contests" data-analytics="NavBarContests" href="" data-reactid="16"><i class="icon-contests" data-reactid="17"></i><span data-reactid="18">Recommedaed Challenges</span></a></li>
+                                <li data-reactid="19" ng-click="barChart();" ><a href="" class="nav_link backbone" data-analytics="NavBarMyRank" id="myrank-nav-link" data-reactid="20"><i class="icon-award" data-reactid="21"></i><span data-reactid="22">Statistics</span></a></li>
+                            </ul>
+                        </div>
+                        <div class="nav-buttons" data-reactid="32">
+                            <ul class="pull-left psR" data-reactid="33">
+                                <li class="hide-in-private-contest search-input-container input-icon main-hr-search" id="search-span" data-reactid="34">
+                                    <div class="search_form" data-reactid="35">
+                                        <div class="hide-in-private-contest search-input input-icon" data-reactid="36">
+                                            <div class="search-query asyn-autocomplete autocomplete" data-reactid="37">
+                                                <div class="ac-input-wrap cf" data-reactid="38">
+                                                    <input autocomplete="off" class="ac-input undefined" value="" data-reactid="39" />
+                                                </div>
+                                            </div><i class="icon-search" data-reactid="40"></i></div>
+                                    </div>
+                                </li>
+                            </ul>
+                            <ul class="pull-left nav-wrap mmL" data-reactid="41">
+
+                                <li class="button-item" data-reactid="70">
+                                    <div class="dropdown dropdown dropdown-auth" id="profile-menu" data-reactid="71">
+                                        <a class="backbone nav_link js-dropdown-toggle js-link" href=""><img src="https://d3rpyts3de3lx8.cloudfront.net/hackerrank/assets/gravatar.jpg" alt="" class="avatar" data-reactid="73" /><span class="mmR" data-reactid="74">{{username}}</span><span class="team-name" data-reactid="75"></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+            </nav>
+        </div>
+    </div>
+
+        
+    <div class="container">
+        <div class="row" ng-show="challengeTable_Display">
+            <div class="col-md-12">
+                <div class="table-responsive">
+                    <table class="table" datatable="ng" dt-options="dtOptions" dt-column-defs="dtColumnDefs">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>Domain</th>
+                                <th>Subdomain</th>
+                                <th>Difficulty</th>
+                                <th>Solved</th>
+                                <th>Attempted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="color: black;" ng-repeat="data in challengeDetails">
+                                <td><a href="" ng-click="details(true, data)">{{data.challenge_id}}</a></td>
+                                <td ng-if="data.domain != null">{{data.domain}}</td>
+                                <td ng-if="data.domain == null">Interview Questions</td>
+                                <td ng-if="data.subdomain != null">{{data.subdomain}}</td>
+                                <td ng-if="data.subdomain == null">N/A</td>
+                                <td>{{data.difficulty}}</td>
+                                <td>{{data.solved}}</td>
+                                <td>{{data.attempted}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+ 
+
+        <div class="row" ng-show="challengeInfo_Display">
+
+            <div class="col-md-12">
+                <button style="padding:6px 16px;margin: 15px 0px 45px;background-color: #27458D;color:white;font-size:15px;float: left;" ng-click="details(false)">Go Back</button>
+                <div class="question-title clearfix">
+                    <div class="pull-left"><h3>1. Two Sum</h3></div>
+                    <div class="pull-right top-buttons">
+                        <div class="btn-group right-pad">
+                            <button type="button" class="btn btn-default active">Question</button>
+                            <button type="button" class="btn btn-default">Editorial Solution</button>
+                        </div>
+                        <a class="btn btn-default" href="">My Submissions</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div class="question-title clearfix">
+
+                    <div class="pull-right">
+                        <ul style="text-align: left;">
+                            <li>Challenge Id: <strong>{{challengeData.challenge_id}}</strong></li>
+                            <li>Solved: <strong>{{challengeData.solved}}</strong></li>
+                            <li>Attempted: <strong>{{challengeData.attempted}}</strong></li>
+                            <li>Difficulty: <strong>{{challengeData.difficulty}}</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="pull-left">
+                        <p style="text-align: left;"><strong>Problem:</strong></p><br>
+                        <p style="text-align: left;">Given an array of integers, return indices of the two numbers such that they add up to a specific target.</p>
+                        <p style="text-align: left;">You may assume that each input would have exactly one solution.</p><br>
+                        <p style="text-align: left;"><strong>Example:</strong></p>
+                        <br>
+                        <code style="text-align: left;">
+                        Given nums = [2, 7, 11, 15], target = 9,
+
+                        Because nums[<b>0</b>] + nums[<b>1</b>] = 2 + 7 = 9,
+                        return [<b>0</b>, <b>1</b>].
+
+                        </code>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <textarea>System.out.println("Hello world!!");</textarea>
+                <div class="pull-right" style="margin: 15px;">
+                    <button type="button" class="btn btn-default">Run Code</button>&nbsp;&nbsp;
+                    <button type="button" class="btn btn-primary" ng-click="calculateRec()">Submit Code</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row" ng-show="graph_Display">
+            <div class="col-md-12">
+            <div class="pull-left"><h3>Difficulty Statistics</h3></div><br>
+                <nvd3 options="scatterChartOptions" data="scatterChartData"></nvd3>
+            <div class="pull-left"><h3>Populaity Statistics</h3></div><br>
+                <nvd3 options="barChartOptions" data="barChartData"></nvd3>
+            </div>
+        </div>
+        
+        <div class="row" ng-show="recTable_Display">
+            <div class="col-md-12">
+            <div class="pull-left"><h3>Recommended Challenges</h3></div><br>
+                <div class="table-responsive">
+                    <table class="table" datatable="ng" dt-options="dtOptionsRec" dt-column-defs="dtColumnDefsRec">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>Domain</th>
+                                <th>Subdomain</th>
+                                <th>Difficulty</th>
+                                <th>Solved</th>
+                                <th>Attempted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="data in recData">
+                                <td><a href="" ng-click="details(true, data)">{{data.challenge_id}}</a></td>
+                                <td>{{data.domain}}</td>
+                                <!-- <td ng-if="data.domain == null">Interview Questions</td> -->
+                                <td ng-if="data.subdomain != null">{{data.subdomain}}</td>
+                                <td ng-if="data.subdomain == null">N/A</td>
+                                <td>{{data.difficulty}}</td>
+                                <td>{{data.solved}}</td>
+                                <td>{{data.attempted}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+{% endverbatim %} 
+</html>
